@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>政治知识库 · 高中思想政治考点</title>
+<meta name="description" content="高中思想政治考点速查：七本书五十八课，章节树、检索、笔记、掌握状态、复盘记录与一键备份，纯静态可离线。">
+<meta name="theme-color" content="#f4f1ea">
+<script>(function(){try{var t=localStorage.getItem("zz.theme");if(!t){t=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"}document.documentElement.dataset.theme=t}catch(e){}})();</script>
+<link rel="stylesheet" href="assets/css/site.css?v=20261124d">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='13' fill='%231f5566'/%3E%3Ctext x='32' y='45' text-anchor='middle' font-family='serif' font-size='34' fill='%23f7fbfc'%3E政%3C/text%3E%3C/svg%3E">
+</head>
+<body>
+<a class="skip-link" href="#listViewport">跳到考点列表</a>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="brand-mark" aria-hidden="true">政</span>
+    <div class="brand-text">
+      <strong>政治知识库</strong>
+      <span id="brandSub">高中思想政治 · 七本书</span>
+    </div>
+  </div>
+
+  <div class="searchbox" role="search">
+    <span class="search-icon" aria-hidden="true">⌕</span>
+    <input id="searchInput" type="search" autocomplete="off" spellcheck="false" placeholder="搜考点、要点、笔记…" aria-label="全局搜索">
+    <kbd id="searchKbd">/</kbd>
+    <button id="searchClear" class="icon-btn" title="清空搜索" aria-label="清空搜索" hidden>×</button>
+  </div>
+
+  <div class="topactions">
+    <button id="themeToggle" class="theme-btn" title="切换明暗主题" aria-label="切换明暗主题">◐</button>
+    <button id="dueBtn" class="btn ghost" title="今日待复盘"><span class="lbl">待复盘</span><span id="dueCount" class="count warn">0</span><span class="ico" aria-hidden="true">待</span></button>
+    <button id="backupBtn" class="btn ghost" title="备份、导出、导入"><span class="lbl">备份</span><span class="ico" aria-hidden="true">⇩</span></button>
+    <button id="helpBtn" class="icon-btn" title="快捷键与说明" aria-label="快捷键与说明">?</button>
+  </div>
+</header>
+
+<section class="hero" aria-label="学习概览">
+  <svg class="hero-scape" viewBox="0 0 1440 240" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <defs>
+      <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#8aa7b6"/><stop offset=".5" stop-color="#c3d3d8"/><stop offset="1" stop-color="#eee7da"/>
+      </linearGradient>
+      <linearGradient id="stone" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#41606c"/><stop offset="1" stop-color="#20363f"/>
+      </linearGradient>
+      <linearGradient id="stone2" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#2c4650"/><stop offset="1" stop-color="#142831"/>
+      </linearGradient>
+      <radialGradient id="dawn" cx=".5" cy=".5" r=".5">
+        <stop offset="0" stop-color="#ffe9c8" stop-opacity=".9"/>
+        <stop offset=".55" stop-color="#f4d9b4" stop-opacity=".3"/>
+        <stop offset="1" stop-color="#f4d9b4" stop-opacity="0"/>
+      </radialGradient>
+    </defs>
+    <rect width="1440" height="240" fill="url(#sky)"/>
+    <circle cx="1080" cy="66" r="190" fill="url(#dawn)"/>
+    <path d="M0 150 L150 120 L260 148 L390 112 L520 146 L660 122 L800 152 L950 118 L1090 150 L1230 124 L1340 148 L1440 132 L1440 240 L0 240Z" fill="#7d97a3" opacity=".5"/>
+    <g opacity=".92">
+      <rect x="120" y="98" width="1200" height="17" fill="url(#stone2)"/>
+      <rect x="140" y="112" width="1160" height="7" fill="#1b3039"/>
+      <g fill="url(#stone)">
+        <rect x="178" y="119" width="30" height="86"/><rect x="330" y="119" width="30" height="86"/>
+        <rect x="482" y="119" width="30" height="86"/><rect x="634" y="119" width="30" height="86"/>
+        <rect x="786" y="119" width="30" height="86"/><rect x="938" y="119" width="30" height="86"/>
+        <rect x="1090" y="119" width="30" height="86"/><rect x="1242" y="119" width="30" height="86"/>
+      </g>
+      <rect x="150" y="203" width="1140" height="10" fill="#142831"/>
+      <rect x="138" y="212" width="1164" height="9" fill="#0f222a"/>
+    </g>
+    <path d="M0 226 L96 214 L220 230 L370 210 L520 228 L700 212 L880 230 L1050 214 L1220 232 L1440 216 L1440 240 L0 240Z" fill="url(#stone2)" opacity=".55"/>
+  </svg>
+  <div class="hero-inner">
+    <div class="hero-copy">
+      <p class="hero-eyebrow">POLITICS ARCHIVE · 思想政治</p>
+      <h1>把七本书，读成<em>一张图</em></h1>
+      <p class="hero-lede">必修四册加选择性必修三册，五十八课拆成可检索的考点卡；制度、原理、易错与答题口径，都在同一处。</p>
+      <div class="hero-meta">
+        <span id="heroDate">2026.11.24</span>
+        <span class="dot" aria-hidden="true"></span>
+        <span>7 本书</span>
+        <span class="dot" aria-hidden="true"></span>
+        <span>58 课</span>
+        <span class="dot" aria-hidden="true"></span>
+        <span id="heroCount">考点</span>
+      </div>
+    </div>
+    <div class="hero-metrics" aria-label="学习数据">
+      <div class="metric accent"><span class="metric-label">考点</span><div class="metric-value"><strong id="heroTotal">0</strong><small>条</small></div></div>
+      <div class="metric"><span class="metric-label">已掌握</span><div class="metric-value"><strong id="heroMastered">0</strong><small>条</small></div></div>
+      <div class="metric"><span class="metric-label">今日待复盘</span><div class="metric-value"><strong id="heroDue">0</strong><small>条</small></div></div>
+      <div class="metric"><span class="metric-label">今日已复盘</span><div class="metric-value"><strong id="heroToday">0</strong><small>条</small></div></div>
+    </div>
+  </div>
+</section>
+
+<div class="layout" id="app">
+  <aside class="pane left-pane" id="leftPane" aria-label="章节树与筛选">
+    <div class="pane-head">
+      <h2>章节树</h2>
+      <button id="collapseAll" class="link-btn">收起全部</button>
+    </div>
+
+    <div class="filters">
+      <label class="field"><span>类型</span>
+        <select id="filterType">
+          <option value="all">全部</option>
+          <option>概念</option><option>原理</option><option>制度</option><option>对比</option><option>易错</option><option>答题</option>
+        </select>
+      </label>
+      <label class="field"><span>难度</span>
+        <select id="filterDiff">
+          <option value="0">全部</option><option value="1">Ⅰ 基础</option><option value="2">Ⅱ 常考</option><option value="3">Ⅲ 难点</option>
+        </select>
+      </label>
+      <label class="field"><span>状态</span>
+        <select id="filterStatus">
+          <option value="all">全部</option><option value="mastered">已掌握</option><option value="review">待复盘</option><option value="none">未标记</option><option value="today">今日已复盘</option>
+        </select>
+      </label>
+      <button id="filterReset" class="link-btn">清除筛选</button>
+    </div>
+
+    <nav id="tree" class="tree" aria-label="教材章节"></nav>
+
+    <div class="pane-foot">
+      <button id="customBtn" class="btn subtle">＋ 自定义考点</button>
+      <button id="reviewBtn" class="btn subtle">复盘记录 <span id="reviewCount" class="count">0</span></button>
+    </div>
+  </aside>
+
+  <main class="pane center-pane" id="centerPane" aria-label="考点列表">
+    <div class="home-strip" id="homeStrip">
+      <div class="strip-left">
+        <span id="scopeLabel" class="scope-label">全部考点</span>
+        <span id="scopeSub" class="muted"></span>
+      </div>
+      <div class="strip-right">
+        <span id="backupInfo" class="muted"></span>
+        <span id="backupWarn" class="warn-line" hidden>距上次备份超过七天，建议导出一次</span>
+      </div>
+    </div>
+
+    <div class="center-toolbar">
+      <div class="result-line"><strong id="resultCount">0</strong><span class="muted"> 条</span><span id="searchHint" class="muted"></span></div>
+      <div class="toolbar-actions">
+        <select id="sortSelect" aria-label="排序">
+          <option value="chapter">按章节</option>
+          <option value="difficulty">按难度</option>
+          <option value="status">按状态</option>
+          <option value="title">按标题</option>
+        </select>
+        <button id="viewToggle" class="btn ghost" data-view="browse" hidden>返回浏览</button>
+      </div>
+    </div>
+
+    <div id="listViewport" class="list-viewport" tabindex="-1">
+      <div id="listCanvas" class="list-canvas"></div>
+      <div id="emptyState" class="empty-state" hidden>
+        <h3>没有匹配的考点</h3>
+        <p class="muted">换个更短的关键词，或清除筛选条件。</p>
+        <div id="nearestList" class="nearest"></div>
+      </div>
+    </div>
+  </main>
+
+  <aside class="pane right-pane" id="rightPane" aria-label="考点详情">
+    <div class="pane-head">
+      <h2>考点详情</h2>
+      <button id="closeDetail" class="icon-btn mobile-only" aria-label="关闭详情">×</button>
+    </div>
+    <div id="detailEmpty" class="detail-empty">
+      <div class="empty-glyph" aria-hidden="true">政</div>
+      <p>从左侧章节树或中间列表选一条考点</p>
+      <p class="muted small">键盘 <kbd>J</kbd> / <kbd>K</kbd> 上下切换，<kbd>Enter</kbd> 打开独立页</p>
+    </div>
+    <div id="detailBody" class="detail-body" hidden></div>
+  </aside>
+</div>
+
+<div class="mobile-tabs" role="tablist" aria-label="移动端面板切换">
+  <button data-tab="tree" role="tab" aria-selected="false">目录</button>
+  <button data-tab="list" role="tab" aria-selected="true">列表</button>
+  <button data-tab="detail" role="tab" aria-selected="false">详情</button>
+</div>
+
+<div id="drawerScrim" class="scrim" hidden></div>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+<div id="modalRoot" class="modal-root" hidden></div>
+
+<script src="data/content.js?v=20261124d"></script>
+<script src="assets/js/store.js?v=20261124d"></script>
+<script src="assets/js/render.js?v=20261124d"></script>
+<script src="assets/js/app.js?v=20261124d"></script>
+<script>
+if ("serviceWorker" in navigator && /^https?:/.test(location.protocol)) {
+  addEventListener("load", function () { navigator.serviceWorker.register("sw.js").catch(function () {}); });
+}
+</script>
+</body>
+</html>
