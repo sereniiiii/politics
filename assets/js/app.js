@@ -28,7 +28,8 @@
   var state = {
     q: '', type: 'all', diff: 0, status: 'all',
     scope: { kind: 'all', bookId: '', lesson: '' },
-    sort: 'chapter', selectedId: '', dueOnly: false
+    sort: 'chapter', selectedId: '', dueOnly: false,
+    view: 'cards', mxDim: 'all', matrixId: '', pairId: ''
   };
 
   /* ---------- 数据装配 ---------- */
@@ -221,6 +222,7 @@
   }
 
   function renderTree() {
+    if (state.view !== 'cards') return renderOtherIndex();
     var tree = $('#tree');
     var keep = tree.scrollTop;
     var exp = (user.config && user.config.expanded) || {};
@@ -269,6 +271,279 @@
         '<span class="lbl">' + R.esc(les.title) + '</span>' +
         '<span class="cnt">' + n + '</span></div>';
     }
+  }
+
+
+  /* ---------- 视图：卡片 / 主体矩阵 / 易混对照 ---------- */
+  var V = window.ZZViews || {};
+  var mx = (V.matrix && V.matrix.subjects && V.matrix.subjects.length) ? V.matrix : null;
+  var prs = (V.pairs && V.pairs.pairs && V.pairs.pairs.length) ? V.pairs.pairs : null;
+  var VIEW_HINT = { cards: '章节索引 · 卡片阅读', matrix: '维度索引 · 横向对比', pairs: '对照索引 · 成对分辨' };
+
+  function viewHasData(v) { return v === 'cards' || (v === 'matrix' && !!mx) || (v === 'pairs' && !!prs); }
+
+  function setViewUrl() {
+    try {
+      var url;
+      if (state.view === 'matrix') {
+        url = '?view=matrix' + (state.mxDim !== 'all' ? '&dim=' + encodeURIComponent(state.mxDim) : '') +
+          (state.matrixId ? '&s=' + encodeURIComponent(state.matrixId) : '');
+      } else if (state.view === 'pairs') {
+        url = '?view=pairs' + (state.pairId ? '&p=' + encodeURIComponent(state.pairId) : '');
+      } else {
+        url = state.selectedId ? '?id=' + encodeURIComponent(state.selectedId) : '';
+      }
+      history.replaceState(null, '', url || location.pathname);
+    } catch (e) { /* file:// 下忽略 */ }
+  }
+
+  function switchView(v, opt) {
+    opt = opt || {};
+    if (!viewHasData(v)) v = 'cards';
+    state.view = v;
+    document.body.classList.toggle('mode-matrix', v === 'matrix');
+    document.body.classList.toggle('mode-pairs', v === 'pairs');
+    var lv = $('#listViewport'), hs = $('#homeStrip'), ct = $('.center-toolbar');
+    if (lv) lv.hidden = v !== 'cards';
+    if (hs) hs.hidden = false;
+    if (ct) ct.hidden = v !== 'cards';
+    var mv = $('#matrixView'), pv = $('#pairsView');
+    if (mv) mv.hidden = v !== 'matrix';
+    if (pv) pv.hidden = v !== 'pairs';
+    $$('#viewBar button').forEach(function (b) {
+      var on = b.getAttribute('data-view') === v;
+      b.classList.toggle('active', on);
+      b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+    var ttl = $('#leftPaneTitle');
+    if (ttl) ttl.textContent = v === 'matrix' ? '主体索引' : v === 'pairs' ? '对照索引' : '章节树';
+    var rtl = $('#rightPaneTitle');
+    if (rtl) rtl.textContent = v === 'matrix' ? '主体详情' : v === 'pairs' ? '对照详情' : '考点详情';
+    var hint = $('#viewbarHint');
+    if (hint) hint.textContent = VIEW_HINT[v] || '';
+    if (v === 'matrix') {
+      $('#scopeLabel').textContent = state.mxDim === 'all' ? '主体矩阵' : '主体矩阵 · 单维';
+      $('#scopeSub').textContent = mx ? mx.subjects.length + ' 个主体 × ' + mx.dims.length + ' 个维度' : '数据未加载';
+    } else if (v === 'pairs') {
+      $('#scopeLabel').textContent = '易混对照';
+      $('#scopeSub').textContent = prs ? prs.length + ' 组最容易混的搭配' : '数据未加载';
+    }
+    renderTree();
+    if (v === 'matrix' && mx) {
+      if (!state.matrixId) state.matrixId = mx.subjects[0].id;
+      renderMatrix(true);
+      renderSubjectDetail(state.matrixId, { openMobile: false });
+    } else if (v === 'pairs' && prs) {
+      if (!state.pairId) state.pairId = prs[0].id;
+      renderPairs(true);
+      renderPairDetail(state.pairId, { openMobile: false });
+    } else if (v === 'cards') {
+      renderList(true);
+      if (state.selectedId && byId(state.selectedId)) renderDetail(state.selectedId);
+      else { $('#detailBody').innerHTML = ''; $('#detailBody').hidden = true; $('#detailEmpty').hidden = false; }
+    }
+    if (!opt.silent) setViewUrl();
+  }
+
+  function renderOtherIndex() {
+    var tree = $('#tree');
+    var keep = tree.scrollTop;
+    var html = '';
+    if (state.view === 'matrix' && mx) {
+      html += '<button class="dim-item' + (state.mxDim === 'all' ? ' active' : '') + '" data-dim="all">' +
+        '<span class="t">全部维度</span><span class="h">一次看全 5 个维度</span></button>';
+      mx.dims.forEach(function (d) {
+        html += '<button class="dim-item' + (state.mxDim === d.key ? ' active' : '') + '" data-dim="' + d.key + '">' +
+          '<span class="t">' + R.esc(d.label) + '</span><span class="h">' + R.esc(d.hint) + '</span></button>';
+      });
+    } else if (state.view === 'pairs' && prs) {
+      prs.forEach(function (x) {
+        html += '<button class="dim-item' + (state.pairId === x.id ? ' active' : '') + '" data-pair="' + x.id + '">' +
+          '<span class="t">' + R.esc(x.title) + '</span><span class="h">' + R.esc((x.terms || []).join(' · ')) + '</span></button>';
+      });
+    }
+    tree.innerHTML = html;
+    tree.scrollTop = keep;
+  }
+
+  function renderMatrix(reset) {
+    var box = $('#matrixView');
+    if (!box || !mx) return;
+    var keep = reset ? 0 : box.scrollTop;
+    var dimOn = null;
+    mx.dims.forEach(function (d) { if (d.key === state.mxDim) dimOn = d; });
+    var html = '<div class="mx-head"><h3>主体 — 职权矩阵</h3><span class="mx-count">' +
+      mx.subjects.length + ' 个主体 · ' + mx.dims.length + ' 个维度</span></div>';
+    html += '<p class="mx-note">' + (dimOn
+      ? '正在看「' + R.esc(dimOn.label) + '」：' + R.esc(dimOn.hint) + '。换维度点左栏，或切回「全部维度」。'
+      : '政治选择题最常见的失分是“主体错位”：先认准主体，再谈它能不能做这件事。按同一维度竖着读，差异最清楚。') + '</p>';
+    html += '<div class="mx-list">';
+    mx.subjects.forEach(function (s) {
+      var sel = state.matrixId === s.id;
+      html += '<article class="mx-card' + (sel ? ' selected' : '') + '" data-subject="' + s.id + '" role="button" tabindex="0">' +
+        '<header><h3>' + R.esc(s.name) + '</h3><span class="badge type">' + R.esc(s.tag) + '</span></header>' +
+        '<p class="mx-sum">' + R.esc(s.summary) + '</p><dl>';
+      mx.dims.forEach(function (d) {
+        if (state.mxDim !== 'all' && state.mxDim !== d.key) return;
+        html += '<div class="mx-row' + (d.key === 'pitfall' ? ' hl' : '') + '"><dt>' + R.esc(d.label) + '</dt>' +
+          '<dd>' + R.esc(s.dims[d.key]) + '</dd></div>';
+      });
+      html += '</dl><div class="mx-foot"><span>点开看完整职权与易错</span><span class="go">详情 ›</span></div></article>';
+    });
+    html += '</div>';
+    box.innerHTML = html;
+    box.scrollTop = keep;
+  }
+
+  function renderPairs(reset) {
+    var box = $('#pairsView');
+    if (!box || !prs) return;
+    var keep = reset ? 0 : box.scrollTop;
+    var html = '<div class="mx-head"><h3>易混对照</h3><span class="mx-count">' + prs.length + ' 组 · 每组只差一个词</span></div>' +
+      '<p class="mx-note">每组先看两个概念各自的定义，再看“区别要点”。考场上真正扣分的是把 A 的定义写到 B 头上。</p>' +
+      '<div class="pair-list">';
+    prs.forEach(function (x) {
+      var sel = state.pairId === x.id;
+      html += '<article class="pair-card' + (sel ? ' selected' : '') + '" data-pair="' + x.id + '" role="button" tabindex="0">' +
+        '<h3>' + R.esc(x.title) + '</h3>' +
+        '<div class="pair-grid">' +
+        '<div class="pair-side"><span class="pair-label">' + R.esc(x.a.label) + '</span><p>' + R.esc(x.a.text) + '</p></div>' +
+        '<div class="pair-side"><span class="pair-label">' + R.esc(x.b.label) + '</span><p>' + R.esc(x.b.text) + '</p></div>' +
+        '</div>' +
+        '<ul class="pair-diff">' + x.diff.map(function (d) { return '<li>' + R.esc(d) + '</li>'; }).join('') + '</ul>' +
+        '<p class="pair-pitfall">易错：' + R.esc(x.pitfall) + '</p></article>';
+    });
+    html += '</div>';
+    box.innerHTML = html;
+    box.scrollTop = keep;
+  }
+
+  function relatedByTerms(terms, limit) {
+    if (!terms || !terms.length) return [];
+    var hit = [];
+    items.forEach(function (it) {
+      var hay = it.title + ' ' + (it.summary || '') + ' ' + (it.core || []).join(' ') + ' ' +
+        (it.pitfall || '') + ' ' + (it.exam || '') + ' ' + (it.terms || []).join(' ');
+      var n = 0;
+      terms.forEach(function (t) { if (t && hay.indexOf(t) >= 0) n++; });
+      if (n) hit.push({ it: it, n: n });
+    });
+    hit.sort(function (a, b) { return b.n - a.n; });
+    return hit.slice(0, limit || 8).map(function (x) { return x.it; });
+  }
+
+  function kwBlock(terms) {
+    if (!terms || !terms.length) return '';
+    return '<section class="detail-section"><h3>关键词</h3><div class="kw-row">' +
+      terms.map(function (t) { return '<span class="kw">' + R.esc(t) + '</span>'; }).join('') + '</div></section>';
+  }
+
+  function relatedBlock(terms, label) {
+    var rel = relatedByTerms(terms, 8);
+    if (!rel.length) return '';
+    return '<section class="detail-section"><h3>' + label + '</h3><div class="related">' +
+      rel.map(function (it) {
+        return '<button class="related-item" data-goto-item="' + it.id + '">' +
+          '<span class="badge type">' + R.esc(it.type) + '</span><span class="t">' + R.esc(it.title) + '</span></button>';
+      }).join('') + '</div></section>';
+  }
+
+  function renderSubjectDetail(id, opt) {
+    if (!mx) return;
+    opt = opt || {};
+    var s = null;
+    mx.subjects.forEach(function (x) { if (x.id === id) s = x; });
+    if (!s) return;
+    state.matrixId = s.id;
+    var html = '<div class="detail-crumb">主体矩阵 · ' + R.esc(s.tag) + '</div>' +
+      '<h1 class="detail-title">' + R.esc(s.name) + '</h1>' +
+      '<div class="detail-badges"><span class="badge type">' + R.esc(s.tag) + '</span></div>' +
+      '<p class="detail-lead">' + R.esc(s.summary) + '</p>' +
+      '<div class="mx-detail">';
+    mx.dims.forEach(function (d) {
+      html += '<section class="detail-section mx-dim' + (state.mxDim === d.key ? ' on' : '') + '">' +
+        '<h3>' + R.esc(d.label) + '</h3><p>' + R.esc(s.dims[d.key]) + '</p></section>';
+    });
+    html += '</div>';
+    html += kwBlock(s.terms);
+    html += relatedBlock(s.terms, '相关考点');
+    $('#detailBody').innerHTML = html;
+    $('#detailBody').hidden = false;
+    $('#detailEmpty').hidden = true;
+    $$('#matrixView .mx-card').forEach(function (c) {
+      c.classList.toggle('selected', c.getAttribute('data-subject') === s.id);
+    });
+    if (opt.openMobile !== false && isMobile()) { openPane('detail'); setTab('detail'); }
+  }
+
+  function renderPairDetail(id, opt) {
+    if (!prs) return;
+    opt = opt || {};
+    var x = null;
+    prs.forEach(function (p) { if (p.id === id) x = p; });
+    if (!x) return;
+    state.pairId = x.id;
+    var html = '<div class="detail-crumb">易混对照 · 定义 → 区别 → 陷阱</div>' +
+      '<h1 class="detail-title">' + R.esc(x.title) + '</h1>' +
+      '<div class="pair-detail">' +
+      '<div class="pair-grid">' +
+      '<div class="pair-side"><span class="pair-label">' + R.esc(x.a.label) + '</span><p>' + R.esc(x.a.text) + '</p></div>' +
+      '<div class="pair-side"><span class="pair-label">' + R.esc(x.b.label) + '</span><p>' + R.esc(x.b.text) + '</p></div>' +
+      '</div></div>' +
+      '<section class="detail-section"><h3>区别要点</h3><div class="core-box detail-content"><ul>' +
+      x.diff.map(function (d) { return '<li>' + R.esc(d) + '</li>'; }).join('') + '</ul></div></section>' +
+      '<section class="detail-section"><h3>易错</h3><div class="pitfall">' + R.esc(x.pitfall) + '</div></section>' +
+      kwBlock(x.terms) + relatedBlock(x.terms || [], '相关考点');
+    $('#detailBody').innerHTML = html;
+    $('#detailBody').hidden = false;
+    $('#detailEmpty').hidden = true;
+    $$('#pairsView .pair-card').forEach(function (c) {
+      c.classList.toggle('selected', c.getAttribute('data-pair') === x.id);
+    });
+    if (opt.openMobile !== false && isMobile()) { openPane('detail'); setTab('detail'); }
+  }
+
+  function selectSubject(id, opt) {
+    opt = opt || {};
+    renderSubjectDetail(id, opt);
+    var card = $('#matrixView .mx-card[data-subject="' + id + '"]');
+    if (card) card.scrollIntoView({ block: 'nearest' });
+    setViewUrl();
+  }
+
+  function selectPair(id, opt) {
+    opt = opt || {};
+    renderPairDetail(id, opt);
+    var card = $('#pairsView .pair-card[data-pair="' + id + '"]');
+    if (card) card.scrollIntoView({ block: 'nearest' });
+    $$('#tree .dim-item').forEach(function (b) {
+      b.classList.toggle('active', b.getAttribute('data-pair') === id);
+    });
+    setViewUrl();
+  }
+
+  function openItem(id) {
+    if (!byId(id)) return;
+    state.q = ''; $('#searchInput').value = '';
+    state.dueOnly = false;
+    state.scope = { kind: 'all', bookId: '', lesson: '' };
+    state.type = 'all'; state.diff = 0; state.status = 'all';
+    $('#filterType').value = 'all'; $('#filterDiff').value = '0'; $('#filterStatus').value = 'all';
+    switchView('cards', { silent: true });
+    renderTree(); renderList(true);
+    select(id, { scrollCard: true, openMobile: true });
+  }
+
+  function moveAlt(step) {
+    var list = state.view === 'matrix' ? mx.subjects : prs;
+    if (!list) return;
+    var ids = list.map(function (x) { return x.id; });
+    var cur = state.view === 'matrix' ? state.matrixId : state.pairId;
+    var i = ids.indexOf(cur);
+    var next = i < 0 ? (step > 0 ? 0 : ids.length - 1) : Math.max(0, Math.min(ids.length - 1, i + step));
+    var id = ids[next];
+    if (state.view === 'matrix') selectSubject(id, { openMobile: false });
+    else selectPair(id, { openMobile: false });
   }
 
   /* ---------- 列表 ---------- */
@@ -465,8 +740,16 @@
     }
     if (typing) return;
     if (e.key === '/') { e.preventDefault(); $('#searchInput').focus(); $('#searchInput').select(); return; }
-    if (e.key === 'j' || e.key === 'J') { e.preventDefault(); move(1); return; }
-    if (e.key === 'k' || e.key === 'K') { e.preventDefault(); move(-1); return; }
+    if (e.key === 'j' || e.key === 'J') {
+      e.preventDefault();
+      if (state.view === 'cards') move(1); else moveAlt(1);
+      return;
+    }
+    if (e.key === 'k' || e.key === 'K') {
+      e.preventDefault();
+      if (state.view === 'cards') move(-1); else moveAlt(-1);
+      return;
+    }
     if (e.key === 'Enter' && state.selectedId) {
       e.preventDefault();
       window.open('detail.html?id=' + encodeURIComponent(state.selectedId), '_blank', 'noopener');
@@ -875,6 +1158,35 @@
       renderTree(); renderList(true);
     });
 
+    $('#viewBar').addEventListener('click', function (e) {
+      var b = e.target.closest('[data-view]');
+      if (b) switchView(b.getAttribute('data-view'));
+    });
+
+    $('#matrixView').addEventListener('click', function (e) {
+      var c = e.target.closest('[data-subject]');
+      if (c) selectSubject(c.getAttribute('data-subject'), { openMobile: true });
+    });
+    $('#pairsView').addEventListener('click', function (e) {
+      var c = e.target.closest('[data-pair]');
+      if (c) selectPair(c.getAttribute('data-pair'), { openMobile: true });
+    });
+    ['matrixView', 'pairsView'].forEach(function (id) {
+      $('#' + id).addEventListener('keydown', function (e) {
+        if (e.key !== 'Enter' && e.key !== ' ') return;
+        var card = e.target.closest('[data-subject],[data-pair]');
+        if (!card) return;
+        e.preventDefault();
+        if (card.hasAttribute('data-subject')) selectSubject(card.getAttribute('data-subject'), { openMobile: true });
+        else selectPair(card.getAttribute('data-pair'), { openMobile: true });
+      });
+    });
+
+    $('#detailBody').addEventListener('click', function (e) {
+      var b = e.target.closest('[data-goto-item]');
+      if (b) openItem(b.getAttribute('data-goto-item'));
+    });
+
     $('#themeToggle').addEventListener('click', function () {
       applyTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
     });
@@ -882,6 +1194,7 @@
     $('#dueBtn').addEventListener('click', function () {
       state.dueOnly = !state.dueOnly;
       state.q = ''; $('#searchInput').value = '';
+      if (state.dueOnly && state.view !== 'cards') switchView('cards', { silent: true });
       renderTree(); renderList(true);
       if (state.dueOnly) toast('只看待复盘：' + dueIds().length + ' 条');
     });
@@ -902,6 +1215,21 @@
     });
 
     $('#tree').addEventListener('click', function (e) {
+      if (state.view === 'matrix') {
+        var d = e.target.closest('[data-dim]');
+        if (!d) return;
+        state.mxDim = d.getAttribute('data-dim');
+        renderOtherIndex(); renderMatrix(true); setViewUrl();
+        if (isMobile()) { closePanes(); setTab('list'); }
+        return;
+      }
+      if (state.view === 'pairs') {
+        var p = e.target.closest('[data-pair]');
+        if (!p) return;
+        selectPair(p.getAttribute('data-pair'), { openMobile: false });
+        if (isMobile()) { closePanes(); setTab('list'); }
+        return;
+      }
       var root = e.target.closest('.tree-lesson.root');
       if (root) { setScopeAll(); return; }
       var bookBtn = e.target.closest('.tree-toggle');
@@ -972,7 +1300,10 @@
 
   function onSearch(v) {
     state.q = v;
-    if (v.trim()) { state.dueOnly = false; }
+    if (v.trim()) {
+      state.dueOnly = false;
+      if (state.view !== 'cards') switchView('cards', { silent: true });
+    }
     renderList(true);
   }
 
@@ -1005,6 +1336,18 @@
     $('#detailBody').hidden = true; $('#detailEmpty').hidden = false;
 
     var params = new URLSearchParams(location.search);
+    var vp = params.get('view');
+    if (vp === 'matrix' && mx) {
+      var dim = params.get('dim');
+      if (dim && mx.dims.some(function (d) { return d.key === dim; })) state.mxDim = dim;
+      var ms = params.get('s');
+      state.matrixId = (ms && mx.subjects.some(function (x) { return x.id === ms; })) ? ms : mx.subjects[0].id;
+      switchView('matrix', { silent: true });
+    } else if (vp === 'pairs' && prs) {
+      var ps = params.get('p');
+      state.pairId = (ps && prs.some(function (x) { return x.id === ps; })) ? ps : prs[0].id;
+      switchView('pairs', { silent: true });
+    }
     var id = params.get('id');
     if (id && byId(id)) {
       select(id, { openMobile: false });
@@ -1019,7 +1362,7 @@
       }
     }
 
-    if (!state.selectedId && visible.length) {
+    if (state.view === 'cards' && !state.selectedId && visible.length) {
       select(visible[0].id, { openMobile: false });
     }
     if (isMobile()) { setTab('list'); closePanes(); }
@@ -1042,7 +1385,17 @@
       setStatus: setStatus,
       toggleToday: toggleToday,
       saveNote: saveNote,
-      setQuery: function (q) { $('#searchInput').value = q; onSearch(q); }
+      setQuery: function (q) { $('#searchInput').value = q; onSearch(q); },
+      view: function () { return state.view; },
+      switchView: switchView,
+      matrixCount: function () { return mx ? mx.subjects.length : 0; },
+      pairsCount: function () { return prs ? prs.length : 0; },
+      selectSubject: selectSubject,
+      selectPair: selectPair,
+      matrixId: function () { return state.matrixId; },
+      pairId: function () { return state.pairId; },
+      mxDim: function () { return state.mxDim; },
+      setDim: function (k) { state.mxDim = k; renderOtherIndex(); renderMatrix(true); setViewUrl(); }
     };
   }
 

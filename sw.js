@@ -3,7 +3,7 @@
    导航请求：网络优先，失败回退缓存（index / detail 均支持带参数）
    静态资源：缓存优先，后台更新
    ============================================================ */
-var CACHE = 'zz-static-v3';
+var CACHE = 'zz-static-v7';
 var ASSETS = [
   './',
   'index.html',
@@ -14,6 +14,9 @@ var ASSETS = [
   'assets/js/app.js',
   'assets/js/detail.js',
   'data/content.js',
+  'data/views.js',
+  'data/matrix.json',
+  'data/pairs.json',
   'data/meta.json',
   'data/b1.json',
   'data/b2.json',

@@ -109,6 +109,55 @@ with open(os.path.join(DATA, "content.js"), "w", encoding="utf-8") as f:
 
 print(f"OK：{len(out)} 条考点，{len(lesson_map)} 课，{len(books)} 本书")
 print(f"content.js 体积：{os.path.getsize(os.path.join(DATA,'content.js'))/1024:.0f} KB")
+
+# ---- 视图数据：主体矩阵 + 易混对照 ----
+mx_path = os.path.join(DATA, "matrix.json")
+pairs_path = os.path.join(DATA, "pairs.json")
+views = {}
+if os.path.exists(mx_path):
+    mx = load("matrix.json")
+    dims = mx["dims"]
+    keys = [d["key"] for d in dims]
+    bad = []
+    for sub in mx["subjects"]:
+        if not sub.get("id") or not sub.get("name"):
+            bad.append("矩阵主体缺少 id 或 name")
+        if set(sub.get("dims", {})) != set(keys):
+            bad.append(f"{sub.get('id')} 的维度与 dims 不一致")
+        for k in keys:
+            if not sub["dims"].get(k):
+                bad.append(f"{sub['id']}.{k} 为空")
+    if bad:
+        print("矩阵校验失败：")
+        for b in bad:
+            print(" -", b)
+        sys.exit(1)
+    views["matrix"] = mx
+if os.path.exists(pairs_path):
+    pr = load("pairs.json")
+    bad = []
+    for x in pr["pairs"]:
+        for k in ("id", "title", "a", "b", "diff", "pitfall"):
+            if k not in x:
+                bad.append(f"{x.get('id','?')} 缺少 {k}")
+        if not isinstance(x.get("diff"), list) or len(x["diff"]) < 2:
+            bad.append(f"{x.get('id','?')} 的区别要点少于 2 条")
+        for side in ("a", "b"):
+            if not x[side].get("label") or not x[side].get("text"):
+                bad.append(f"{x.get('id','?')}.{side} 缺少 label 或 text")
+    if bad:
+        print("对照校验失败：")
+        for b in bad:
+            print(" -", b)
+        sys.exit(1)
+    views["pairs"] = pr
+
+if views:
+    vjs = "/* 自动生成，请勿手改；改 data/matrix.json / data/pairs.json 后运行 tools/build_content.py */\n"
+    vjs += "window.ZZViews = " + json.dumps(views, ensure_ascii=False, separators=(",", ":")) + ";\n"
+    with open(os.path.join(DATA, "views.js"), "w", encoding="utf-8") as f:
+        f.write(vjs)
+    print(f"views.js：{len(views.get('matrix',{}).get('subjects',[]))} 个主体 · {len(views.get('pairs',{}).get('pairs',[]))} 组对照 · {os.path.getsize(os.path.join(DATA,'views.js'))/1024:.1f} KB")
 print("每课条数：")
 for b in books:
     row = " ".join(f"{les['id']}:{lesson_counts[les['id']]}" for les in b["lessons"])
