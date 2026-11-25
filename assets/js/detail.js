@@ -60,7 +60,10 @@
     }
     body.hidden = false; missing.hidden = true;
     var related = items.filter(function (x) { return x.lesson === item.lesson && x.id !== item.id; }).slice(0, 8);
-    body.innerHTML = R.detailHTML(item, user, { today: TODAY, standalone: true, related: related });
+    var lv = (window.ZZViews && window.ZZViews.lessons) || [];
+    var lm = null;
+    for (var i = 0; i < lv.length; i++) if (lv[i].lesson === item.lesson) { lm = lv[i]; break; }
+    body.innerHTML = R.detailHTML(item, user, { today: TODAY, standalone: true, related: related, lessonMap: lm });
 
     R.bindDetail(body, item, {
       setStatus: function (s) { applyStatus(s); },

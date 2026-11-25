@@ -351,7 +351,7 @@
     var html = '';
     if (state.view === 'matrix' && mx) {
       html += '<button class="dim-item' + (state.mxDim === 'all' ? ' active' : '') + '" data-dim="all">' +
-        '<span class="t">全部维度</span><span class="h">一次看全 5 个维度</span></button>';
+        '<span class="t">全部维度</span><span class="h">一次看全 ' + mx.dims.length + ' 个维度</span></button>';
       mx.dims.forEach(function (d) {
         html += '<button class="dim-item' + (state.mxDim === d.key ? ' active' : '') + '" data-dim="' + d.key + '">' +
           '<span class="t">' + R.esc(d.label) + '</span><span class="h">' + R.esc(d.hint) + '</span></button>';
@@ -410,6 +410,7 @@
         '<div class="pair-side"><span class="pair-label">' + R.esc(x.a.label) + '</span><p>' + R.esc(x.a.text) + '</p></div>' +
         '<div class="pair-side"><span class="pair-label">' + R.esc(x.b.label) + '</span><p>' + R.esc(x.b.text) + '</p></div>' +
         '</div>' +
+        (x.memo ? '<p class="pair-memo">一句判断：' + R.esc(x.memo) + '</p>' : '') +
         '<ul class="pair-diff">' + x.diff.map(function (d) { return '<li>' + R.esc(d) + '</li>'; }).join('') + '</ul>' +
         '<p class="pair-pitfall">易错：' + R.esc(x.pitfall) + '</p></article>';
     });
@@ -465,6 +466,9 @@
         '<h3>' + R.esc(d.label) + '</h3><p>' + R.esc(s.dims[d.key]) + '</p></section>';
     });
     html += '</div>';
+    if (s.anchorLesson) {
+      html += '<button class="btn small lm-jump" data-goto-lesson="' + R.esc(s.anchorLesson) + '">去考点卡看本课脉络 →</button>';
+    }
     html += kwBlock(s.terms);
     html += relatedBlock(s.terms, '相关考点');
     $('#detailBody').innerHTML = html;
@@ -490,6 +494,7 @@
       '<div class="pair-side"><span class="pair-label">' + R.esc(x.a.label) + '</span><p>' + R.esc(x.a.text) + '</p></div>' +
       '<div class="pair-side"><span class="pair-label">' + R.esc(x.b.label) + '</span><p>' + R.esc(x.b.text) + '</p></div>' +
       '</div></div>' +
+      (x.memo ? '<p class="pair-memo big">一句判断：' + R.esc(x.memo) + '</p>' : '') +
       '<section class="detail-section"><h3>区别要点</h3><div class="core-box detail-content"><ul>' +
       x.diff.map(function (d) { return '<li>' + R.esc(d) + '</li>'; }).join('') + '</ul></div></section>' +
       '<section class="detail-section"><h3>易错</h3><div class="pitfall">' + R.esc(x.pitfall) + '</div></section>' +
@@ -622,6 +627,25 @@
   }
 
   /* ---------- 详情 ---------- */
+  function mapOfLesson(lid) {
+    var lv = (window.ZZViews && window.ZZViews.lessons) || [];
+    for (var i = 0; i < lv.length; i++) if (lv[i].lesson === lid) return lv[i];
+    return null;
+  }
+
+  function jumpLesson(lid) {
+    if (!lid) return;
+    if (state.view !== 'cards') switchView('cards', { silent: true });
+    state.q = ''; $('#searchInput').value = '';
+    state.scope = { kind: 'lesson', bookId: '', lesson: lid };
+    state.type = 'all'; state.diff = 0; state.status = 'all'; state.dueOnly = false;
+    if ($('#filterType')) $('#filterType').value = 'all';
+    if ($('#filterDiff')) $('#filterDiff').value = '0';
+    if ($('#filterStatus')) $('#filterStatus').value = 'all';
+    renderTree(); renderList(true);
+    select(lid + '-0', { openMobile: true });
+  }
+
   function renderDetail(id) {
     var it = byId(id);
     var body = $('#detailBody'), empty = $('#detailEmpty');
@@ -634,7 +658,7 @@
     var related = items.filter(function (x) { return x.lesson === it.lesson && x.id !== it.id; }).slice(0, 6);
     empty.hidden = true;
     body.hidden = false;
-    body.innerHTML = R.detailHTML(it, user, { today: TODAY, related: related });
+    body.innerHTML = R.detailHTML(it, user, { today: TODAY, related: related, lessonMap: mapOfLesson(it.lesson) });
     body.scrollTop = 0;
 
     R.bindDetail(body, it, {
@@ -1262,6 +1286,11 @@
       var card = e.target.closest('.k-card');
       if (!card) return;
       select(card.getAttribute('data-id'), { scrollCard: false, openMobile: true });
+    });
+
+    $('#detailBody').addEventListener('click', function (e) {
+      var l = e.target.closest('[data-goto-lesson]');
+      if (l) { jumpLesson(l.getAttribute('data-goto-lesson')); }
     });
 
     $('#emptyState').addEventListener('click', function (e) {

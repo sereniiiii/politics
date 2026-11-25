@@ -92,6 +92,20 @@
     }).join('') + '</ul>';
   }
 
+  function lessonMapHTML(map) {
+    if (!map) return '';
+    return '<details class="lesson-map">' +
+      '<summary><span class="lm-kicker">本课脉络</span><span class="lm-sub">主线 · 必背 · 易错 · 常问</span></summary>' +
+      '<ol class="lm-chain">' + (map.chain || []).map(function (c) { return '<li>' + esc(c) + '</li>'; }).join('') + '</ol>' +
+      '<div class="lm-block"><h4>必背术语</h4><div class="kw-row">' +
+        (map.must || []).map(function (t) { return '<span class="kw">' + esc(t) + '</span>'; }).join('') + '</div></div>' +
+      '<div class="lm-block"><h4>本课易错</h4><ul class="lm-traps">' +
+        (map.traps || []).map(function (t) { return '<li>' + esc(t) + '</li>'; }).join('') + '</ul></div>' +
+      '<div class="lm-block"><h4>常问角度</h4><ul class="lm-asks">' +
+        (map.asks || []).map(function (t) { return '<li>' + esc(t) + '</li>'; }).join('') + '</ul></div>' +
+      '</details>';
+  }
+
   function detailHTML(item, user, opts) {
     opts = opts || {};
     var today = opts.today || today0();
@@ -109,6 +123,7 @@
       '<h1 class="detail-title">' + esc(item.title) + '</h1>' +
       '<div class="detail-badges">' + badges(item, user, today, '') + '</div>' +
       '<p class="detail-lead">' + esc(item.summary || '') + '</p>' +
+      (item.type !== '总览' ? lessonMapHTML(opts.lessonMap) : '') +
 
       '<div class="status-block">' +
         '<div class="status-row" role="group" aria-label="掌握状态">' +
