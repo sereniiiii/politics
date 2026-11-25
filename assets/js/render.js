@@ -92,6 +92,16 @@
     }).join('') + '</ul>';
   }
 
+  function applyHTML(ap) {
+    if (!ap || !ap.signal || !ap.call || !ap.write) return '';
+    return '<section class="detail-section apply-box">' +
+      '<h3>材料题怎么用</h3>' +
+      '<div class="apply-step"><span class="apply-k">看到</span><p>' + esc(ap.signal) + '</p></div>' +
+      '<div class="apply-step"><span class="apply-k">调用</span><p>' + esc(ap.call) + '</p></div>' +
+      '<div class="apply-step"><span class="apply-k">落笔</span><p>' + esc(ap.write) + '</p></div>' +
+      '</section>';
+  }
+
   function lessonMapHTML(map) {
     if (!map) return '';
     return '<details class="lesson-map">' +
@@ -149,6 +159,8 @@
 
       (item.exam ?
         '<section class="detail-section"><h3>考法</h3><div class="exam-box">' + esc(item.exam) + '</div></section>' : '') +
+
+      applyHTML(item.apply) +
 
       ((item.terms && item.terms.length) ?
         '<section class="detail-section"><h3>关键词</h3><div class="kw-row">' +

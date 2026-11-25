@@ -61,6 +61,11 @@ for it in items:
         errs.append(f"{it['id']} 的 lesson 不存在：{it['lesson']}")
     if not isinstance(it["core"], list) or not it["core"]:
         errs.append(f"{it['id']} core 必须是非空数组")
+    if len(it["core"]) < 6:
+        errs.append(f"{it['id']} core 少于 6 条")
+    ap = it.get("apply")
+    if not isinstance(ap, dict) or not all(ap.get(k) for k in ("signal", "call", "write")):
+        errs.append(f"{it['id']} apply 缺少 signal/call/write")
     if it["diff"] not in (1, 2, 3):
         errs.append(f"{it['id']} diff 非法：{it['diff']}")
     if it["type"] not in ("总览", "概念", "原理", "制度", "对比", "易错", "答题"):
@@ -130,6 +135,7 @@ for it in items:
         "type": it["type"],
         "diff": it["diff"],
         "core": it["core"],
+        "apply": it.get("apply"),
         "pitfall": it.get("pitfall", ""),
         "exam": it.get("exam", ""),
         "terms": it.get("terms", []),

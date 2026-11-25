@@ -3,7 +3,7 @@
    导航请求：网络优先，失败回退缓存（index / detail 均支持带参数）
    静态资源：缓存优先，后台更新
    ============================================================ */
-var CACHE = 'zz-static-v10';
+var CACHE = 'zz-static-v12';
 var ASSETS = [
   './',
   'index.html',
